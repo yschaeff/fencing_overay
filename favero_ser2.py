@@ -82,7 +82,7 @@ while True:
 
     lab_time = font.render(f" {min:02d}:{sec:02d}:{msec:03d} ", False, WHITE, BLACK)
     lab_gscore = font.render(f" {green:2d} [{gled}] ", False, WHITE, GREEN)
-    lab_rscore = font.render(f" [{rled} {red:2d}] ", False, WHITE, RED)
+    lab_rscore = font.render(f" [{rled}] {red:2d} ", False, WHITE, RED)
 
     Wt, Ht = font.size(f" {min:02d}:{sec:02d}:{msec:03d} ")
     Wg, Hg = font.size(f" {green:2d} [{gled}] ")
