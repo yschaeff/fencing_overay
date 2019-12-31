@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
 
-import serial
-import sys
-import time
-import tkinter as tk
+import serial, sys, time, pygame
 
 MSG_START = 0x7f
 MSG_LEN = 9
@@ -27,20 +24,26 @@ except FileNotFoundError as e:
 except serial.serialutil.SerialException as e:
     sys.exit(f"Kan seriele poort niet openen: {e}")
 
-window = tk.Tk()
-frame = tk.Frame(window)
-frame.pack(fill='x', side='bottom', anchor='center')
+WHITE = (255,255,255)
+BLACK = (0,0,0)
+RED   = (255,0,0)
+GREEN = (0,255,0)
+BLUE  = (0,0,255)
+CHROMA_KEY  = (96,144,144)
 
-time_label = tk.Label(frame, text="time", fg="black", bg="white")
-green_label = tk.Label(frame, text="green", fg="black", bg="white")
-red_label = tk.Label(frame, text="red", fg="black", bg="white")
-green_label.pack(side='left')
-time_label.pack(side='left', padx = 5)
-red_label.pack(side='left')
+WINDOW_SIZE = (640, 480)
 
+pygame.init()
+font = pygame.font.SysFont("Roboto-Bold.ttf", 48)
+
+screen = pygame.display.set_mode( WINDOW_SIZE )
 extra_bit = 0x8
 last_sec = 0
 while True:
+    ## handle user close window event
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT: sys.exit(0)
+
     try: #get in sync until end of file
         if ser.read(1)[0] != MSG_START: continue
     except IndexError: break
@@ -76,10 +79,21 @@ while True:
     penalty = decode(rawmsg[7])
 
     print(f"{green:2d} [{gled}] <{min:02d}:{sec:02d}:{msec:03d}> [{rled}] {red:2d} -- {tim:2d} {penalty:2d} {match:2d}", end="\r")
-    green_label["text"] = f"{green:2d} [{gled}]"
-    red_label["text"] = f"{red:2d} [{rled}]"
-    time_label["text"] = f"{min:02d}:{sec:02d}:{msec:03d}"
-    window.update()
+
+    lab_time = font.render(f" {min:02d}:{sec:02d}:{msec:03d} ", False, WHITE, BLACK)
+    lab_gscore = font.render(f" {green:2d} [{gled}] ", False, WHITE, GREEN)
+    lab_rscore = font.render(f" [{rled} {red:2d}] ", False, WHITE, RED)
+
+    Wt, Ht = font.size(f" {min:02d}:{sec:02d}:{msec:03d} ")
+    Wg, Hg = font.size(f" {green:2d} [{gled}] ")
+    Y = WINDOW_SIZE[1] - 1.5 * Ht
+
+    screen.fill( CHROMA_KEY )
+    screen.blit(lab_time, ((WINDOW_SIZE[0] - Wt)//2, Y) )
+    screen.blit(lab_gscore, ((WINDOW_SIZE[0] - Wt)//2 - Wg, Y) )
+    screen.blit(lab_rscore, ((WINDOW_SIZE[0] + Wt)//2, Y) )
+    pygame.display.flip()
+
     time.sleep(.015)
 print()
 
